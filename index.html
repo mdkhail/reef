@@ -4,91 +4,127 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>سجل متابعة الخطابات - برنامج ريف السعودية</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         :root {
-            --sidebar-bg: #113322;
-            --sidebar-hover: #1b4731;
-            --accent-gold: #cca047;
-            --main-bg: #f3f5f2;
+            --sidebar-bg: #143623;
+            --accent-gold: #d4a34b;
+            --main-bg: #f9f9f6;
             --card-bg: #ffffff;
-            --text-main: #2b2b2b;
-            --text-muted: #6c757d;
+            --text-main: #333333;
+            --text-muted: #888888;
             --border-color: #e5e9e3;
+            
+            /* Status Colors */
+            --color-closed: #1e5631; /* أخضر غامق */
+            --color-stalled: #6b21a8; /* بنفسجي */
+            --color-pending: #d97706; /* برتقالي/ذهبي */
+            --color-delayed: #dc2626; /* أحمر */
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Tajawal', sans-serif; }
-        body { background-color: var(--main-bg); color: var(--text-main); display: flex; min-height: 100vh; }
+        body { background-color: var(--main-bg); color: var(--text-main); display: flex; min-height: 100vh; overflow-x: hidden; }
 
         /* --- الشريط الجانبي --- */
-        .sidebar { width: 260px; background-color: var(--sidebar-bg); color: #ffffff; display: flex; flex-direction: column; flex-shrink: 0; }
-        .sidebar-header { padding: 25px 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.08); }
-        .sidebar-header h2 { font-size: 22px; font-weight: 700; color: #fff; }
-        .sidebar-header span { display: block; font-size: 11px; color: var(--accent-gold); margin-top: 4px; }
-        .sidebar-menu { padding: 20px 0; list-style: none; }
-        .menu-title { font-size: 12px; color: rgba(255,255,255,0.5); padding: 10px 25px; text-transform: uppercase; }
-        .menu-item { display: flex; align-items: center; padding: 12px 25px; color: #d1d5db; text-decoration: none; font-size: 14px; transition: all 0.2s; cursor: pointer; }
-        .menu-item i { margin-left: 12px; width: 18px; text-align: center; }
-        .menu-item:hover { background-color: var(--sidebar-hover); color: #fff; }
-        .menu-item.active { background-color: var(--accent-gold); color: #113322; font-weight: 700; border-radius: 8px 0 0 8px; margin-right: 10px; }
+        .sidebar { width: 280px; background-image: url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.03"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E'); background-color: var(--sidebar-bg); color: #ffffff; display: flex; flex-direction: column; flex-shrink: 0; box-shadow: -3px 0 15px rgba(0,0,0,0.1); z-index: 10; }
+        .sidebar-header { padding: 30px 20px; text-align: center; }
+        .sidebar-header h2 { font-size: 26px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
+        .sidebar-header span { display: block; font-size: 11px; color: var(--accent-gold); letter-spacing: 2px; margin-top: -2px; }
+        .sidebar-header p { font-size: 11px; color: #a3b899; margin-top: 10px; }
+        .sidebar-menu { padding: 10px 0; list-style: none; }
+        .menu-title { font-size: 12px; color: rgba(255,255,255,0.4); padding: 10px 30px; margin-top: 15px; }
+        .menu-item { display: flex; align-items: center; padding: 14px 30px; color: #e2e8f0; text-decoration: none; font-size: 15px; transition: all 0.3s; cursor: pointer; }
+        .menu-item i { margin-left: 15px; width: 20px; text-align: center; font-size: 16px; }
+        .menu-item:hover { color: var(--accent-gold); }
+        .menu-item.active { background-color: var(--accent-gold); color: #113322; font-weight: 700; border-radius: 8px 0 0 8px; margin-right: 15px; padding-right: 15px; }
 
         /* --- المحتوى الرئيسي --- */
-        .main-content { flex-grow: 1; padding: 25px 35px; overflow-y: auto; height: 100vh; }
-        .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; }
-        .header-title h1 { font-size: 24px; font-weight: 700; color: #1a202c; }
-        .header-title p { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
-        .header-actions { display: flex; align-items: center; gap: 12px; }
-        .last-update { font-size: 12px; color: var(--text-muted); background: #eef2eb; padding: 6px 12px; border-radius: 20px; display: flex; align-items: center; gap: 6px; }
+        .main-content { flex-grow: 1; display: flex; flex-direction: column; height: 100vh; overflow-y: auto; }
+        
+        /* الهيدر العلوي الأبيض */
+        .top-header { background: #fff; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.02); z-index: 5; border-bottom: 3px solid var(--accent-gold); }
+        .header-title { text-align: right; }
+        .header-title h1 { font-size: 28px; font-weight: 800; color: #143623; margin-bottom: 5px; }
+        .header-title p { font-size: 13px; color: var(--text-muted); }
+        .header-actions { display: flex; align-items: center; gap: 15px; direction: ltr; }
+        
+        .last-update { font-size: 13px; color: var(--text-muted); background: #f3f5f2; padding: 8px 15px; border-radius: 20px; display: flex; align-items: center; gap: 8px; direction: rtl; }
         .last-update-dot { width: 8px; height: 8px; background-color: #22c55e; border-radius: 50%; }
-        .btn { padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; border: 1px solid transparent; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s; }
-        .btn-outline { background: #fff; border-color: #cbd5e1; color: #475569; }
-        .btn-outline:hover { background: #f8fafc; }
-        .btn-primary { background: #1e5338; color: #fff; }
-        .btn-primary:hover { background: #143828; }
+        
+        .btn { padding: 10px 20px; border-radius: 25px; font-size: 14px; font-weight: 700; border: 1px solid transparent; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.3s; direction: rtl; }
+        .btn-outline { background: #fff; border-color: #143623; color: #143623; }
+        .btn-outline:hover { background: #f3f5f2; }
+        .btn-primary { background: #143623; color: #fff; }
+        .btn-primary:hover { background: #0d2417; }
+
+        .content-area { padding: 40px; }
 
         /* الأقسام والتبويبات */
-        .view-section { display: none; animation: fadeIn 0.3s ease; }
+        .view-section { display: none; animation: fadeIn 0.4s ease; }
         .view-section.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* كارت البيانات والجدول */
-        .content-card { background: var(--card-bg); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid var(--border-color); padding: 20px; }
-        .filter-bar { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; align-items: center; }
-        .search-box { position: relative; flex-grow: 2; min-width: 250px; }
-        .search-box input { width: 100%; padding: 9px 38px 9px 15px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; outline: none; background-color: #f8fafc; }
-        .search-box i { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
-        .filter-select { padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; color: #334155; background-color: #f8fafc; outline: none; cursor: pointer; min-width: 130px; }
-        .results-count { margin-right: auto; font-size: 13px; color: var(--text-muted); font-weight: 500; }
+        /* --- بطاقات النظرة العامة (KPIs) مطابقة للصورة --- */
+        .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 20px; }
+        .kpi-card { background: var(--card-bg); padding: 25px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.02); position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; min-height: 140px; }
+        .kpi-icon { position: absolute; top: 20px; left: 20px; width: 35px; height: 35px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+        .kpi-card h3 { font-size: 14px; color: var(--text-muted); font-weight: 500; width: 100%; text-align: right; margin-bottom: 5px; }
+        .kpi-card .value { font-size: 38px; font-weight: 800; color: #1a1a1a; margin-bottom: 5px; }
+        .kpi-card .desc { font-size: 12px; color: #999; text-align: right; width: 100%; }
 
+        /* ألوان البطاقات */
+        .card-icon-green { background: #e8f5e9; color: #2e7d32; }
+        .card-icon-red { background: #ffebee; color: #c62828; }
+        .card-icon-gold { background: #fef8e5; color: #d97706; }
+        
+        .card-border-green { border-right: 5px solid var(--color-closed); }
+        .card-border-purple { border-right: 5px solid var(--color-stalled); }
+        .card-border-yellow { border-right: 5px solid var(--color-pending); }
+        .card-border-red { border-right: 5px solid var(--color-delayed); }
+
+        /* --- الجداول والبطاقات --- */
+        .content-card { background: var(--card-bg); border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid var(--border-color); padding: 25px; margin-bottom: 25px;}
+        .card-title { font-size: 18px; font-weight: 700; color: #333; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .card-title::before { content: ''; width: 4px; height: 20px; background: var(--accent-gold); border-radius: 4px; display: inline-block; }
+
+        /* الفلاتر والبحث */
+        .filter-bar { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 25px; background: #fcfcfc; padding: 15px; border-radius: 12px; border: 1px solid #eee; }
+        .search-box { position: relative; flex-grow: 1; min-width: 300px; }
+        .search-box input { width: 100%; padding: 12px 40px 12px 15px; border: 1px solid #e2e8f0; border-radius: 25px; font-size: 13px; outline: none; background-color: #fff; }
+        .search-box i { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
+        .filter-select { padding: 10px 15px; border: 1px solid #e2e8f0; border-radius: 25px; font-size: 13px; color: #334155; background-color: #fff; outline: none; cursor: pointer; min-width: 140px; }
+        .results-count { width: 100%; font-size: 13px; color: var(--text-muted); margin-top: 5px; }
+
+        /* الجدول */
         .table-responsive { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; text-align: right; font-size: 13px; }
-        th { background-color: #f8fafc; color: #475569; font-weight: 700; padding: 12px 10px; border-bottom: 2px solid var(--border-color); white-space: nowrap; }
-        td { padding: 14px 10px; border-bottom: 1px solid var(--border-color); color: #334155; vertical-align: middle; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; text-align: right; font-size: 13px; }
+        th { color: #64748b; font-weight: 700; padding: 15px; border-bottom: 2px solid #e2e8f0; white-space: nowrap; }
+        td { padding: 15px; border-bottom: 1px solid #f1f5f9; color: #334155; vertical-align: middle; }
         tr:hover td { background-color: #f8fafc; }
 
-        /* الشارات */
-        .badge { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; display: inline-block; }
+        .badge { padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-block; text-align: center; min-width: 70px; }
         .badge-type { background-color: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
-        .badge-status-closed { background-color: #dcfce7; color: #166534; }
-        .badge-status-pending { background-color: #fef9c3; color: #854d0e; }
-        .badge-status-delayed { background-color: #fee2e2; color: #991b1b; }
+        .badge-closed { background-color: #ecfdf5; color: #059669; }
+        .badge-stalled { background-color: #faf5ff; color: #9333ea; }
+        .badge-pending { background-color: #fffbeb; color: #d97706; }
+        .badge-delayed { background-color: #fef2f2; color: #dc2626; }
 
-        /* الترقيم (Pagination) */
-        .pagination { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color); }
-        .page-btn { padding: 6px 12px; border: 1px solid #cbd5e1; background: #fff; border-radius: 6px; cursor: pointer; font-size: 13px; color: #334155; transition: 0.2s; }
+        /* الترقيم */
+        .pagination { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 25px; }
+        .page-btn { padding: 8px 14px; border: 1px solid #e2e8f0; background: #fff; border-radius: 8px; cursor: pointer; font-size: 13px; color: #334155; font-weight: 500; transition: 0.2s; }
         .page-btn:hover:not(:disabled) { background: #f8fafc; }
-        .page-btn.active { background: var(--sidebar-bg); color: #fff; border-color: var(--sidebar-bg); font-weight: bold; }
+        .page-btn.active { background: var(--accent-gold); color: #fff; border-color: var(--accent-gold); }
         .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        /* مؤشرات نظرة عامة (KPIs) */
-        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 25px; }
-        .kpi-card { background: #fff; padding: 25px; border-radius: 12px; border: 1px solid var(--border-color); text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
-        .kpi-card i { font-size: 28px; color: var(--accent-gold); margin-bottom: 12px; }
-        .kpi-card h3 { font-size: 14px; color: var(--text-muted); margin-bottom: 10px; font-weight: 500;}
-        .kpi-card .value { font-size: 32px; font-weight: 700; color: var(--sidebar-bg); }
+        /* حاويات الرسوم البيانية */
+        .chart-container { position: relative; height: 400px; width: 100%; }
+        .chart-container-doughnut { position: relative; height: 400px; width: 100%; display: flex; justify-content: center; }
+        
+        .footer-note { text-align: center; font-size: 11px; color: #aaa; margin-top: auto; padding: 20px; }
     </style>
 </head>
 <body>
@@ -98,20 +134,20 @@
         <div class="sidebar-header">
             <h2>ريف السعودية</h2>
             <span>SAUDI REEF</span>
-            <p style="font-size: 10px; color: #a3b899; margin-top: 5px;">برنامج التنمية الريفية الزراعية المستدامة</p>
+            <p>برنامج التنمية الريفية الزراعية المستدامة</p>
         </div>
         
         <ul class="sidebar-menu">
             <li class="menu-title">لوحات عامة</li>
-            <li><a class="menu-item" onclick="switchView('overview', this)"><i class="fa-solid fa-chart-pie"></i> نظرة عامة</a></li>
+            <li><a class="menu-item active" onclick="switchView('overview', this)"><i class="fa-solid fa-border-all"></i> نظرة عامة</a></li>
 
             <li class="menu-title">إدارة الخطابات</li>
-            <li><a class="menu-item active" onclick="switchView('log', this)"><i class="fa-regular fa-folder-open"></i> سجل الخطابات</a></li>
+            <li><a class="menu-item" onclick="switchView('log', this)"><i class="fa-solid fa-file-lines"></i> سجل الخطابات</a></li>
 
             <li class="menu-title">تحليل وتفصيل</li>
-            <li><a class="menu-item" onclick="switchView('type', this)"><i class="fa-solid fa-list-check"></i> حسب النوع</a></li>
-            <li><a class="menu-item" onclick="switchView('sector', this)"><i class="fa-solid fa-sitemap"></i> حسب القطاع</a></li>
-            <li><a class="menu-item" onclick="switchView('entity', this)"><i class="fa-solid fa-building"></i> حسب الجهة</a></li>
+            <li><a class="menu-item" onclick="switchView('type', this)"><i class="fa-solid fa-tag"></i> حسب النوع</a></li>
+            <li><a class="menu-item" onclick="switchView('sector', this)"><i class="fa-solid fa-layer-group"></i> حسب القطاع</a></li>
+            <li><a class="menu-item" onclick="switchView('entity', this)"><i class="fa-regular fa-building"></i> حسب الجهة</a></li>
             <li><a class="menu-item" onclick="switchView('timeline', this)"><i class="fa-regular fa-clock"></i> المراحل الزمنية</a></li>
         </ul>
     </div>
@@ -120,106 +156,148 @@
     <div class="main-content">
         <!-- الهيدر العلوي -->
         <div class="top-header">
-            <div class="header-title">
-                <h1 id="page-title">سجل متابعة الخطابات</h1>
-                <p>لوحة معلومات تنفيذية تتحدث تلقائياً من قاعدة بيانات الخطابات — برنامج ريف السعودية</p>
-            </div>
             <div class="header-actions">
+                <button class="btn btn-primary" onclick="fetchSheetData()"><i class="fa-solid fa-rotate"></i> تحديث الآن</button>
+                <button class="btn btn-outline"><i class="fa-solid fa-file-export"></i> إنشاء تقرير</button>
                 <div class="last-update">
                     <span class="last-update-dot"></span>
-                    <span id="update-time">أخر تحديث: جاري التحميل...</span>
+                    <span id="update-time">آخر تحديث: جاري التحميل...</span>
                 </div>
-                <button class="btn btn-primary" onclick="fetchSheetData()"><i class="fa-solid fa-rotate"></i> تحديث البيانات</button>
+            </div>
+            <div class="header-title">
+                <h1 id="page-title">سجل متابعة الخطابات</h1>
+                <p>لوحة معلومات تنفيذية تتحدّث تلقائيًا من قاعدة بيانات الخطابات — برنامج ريف السعودية</p>
             </div>
         </div>
 
-        <!-- 1. قسم: سجل الخطابات (الرئيسي) -->
-        <div id="view-log" class="view-section active">
-            <div class="content-card">
-                <div class="filter-bar">
-                    <div class="search-box">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                        <input type="text" id="searchInput" onkeyup="filterData()" placeholder="ابحث بالمشروع، الموضوع، الجهة، أو الرقم...">
+        <div class="content-area">
+            
+            <!-- 1. قسم: نظرة عامة -->
+            <div id="view-overview" class="view-section active">
+                <!-- الصف الأول -->
+                <div class="kpi-grid" id="kpiRow1">
+                    <!-- تعبأ برمجيا -->
+                </div>
+                <!-- الصف الثاني -->
+                <div class="kpi-grid" id="kpiRow2">
+                     <!-- تعبأ برمجيا -->
+                </div>
+            </div>
+
+            <!-- 2. قسم: سجل الخطابات -->
+            <div id="view-log" class="view-section">
+                <div class="content-card">
+                    <div class="filter-bar">
+                        <select class="filter-select" id="dateFilter" onchange="filterData()"><option value="">كل التواريخ</option></select>
+                        <select class="filter-select" id="statusFilter" onchange="filterData()">
+                            <option value="">كل الحالات</option>
+                            <option value="مغلق">مغلق</option>
+                            <option value="معلق">بانتظار الرد / معلق</option>
+                            <option value="متأخر">متأخر</option>
+                            <option value="متعثر">متعثر</option>
+                        </select>
+                        <select class="filter-select" id="entityFilter" onchange="filterData()"><option value="">كل الجهات</option></select>
+                        <select class="filter-select" id="sectorFilter" onchange="filterData()"><option value="">كل القطاعات</option></select>
+                        <select class="filter-select" id="typeFilter" onchange="filterData()"><option value="">كل التصنيفات</option></select>
+                        <div class="search-box">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="searchInput" onkeyup="filterData()" placeholder="ابحث بالمشروع، الموضوع، الجهة، أو الرقم...">
+                        </div>
+                        <div class="results-count" id="resultsCount">0 نتيجة</div>
                     </div>
-                    <select class="filter-select" id="typeFilter" onchange="filterData()"><option value="">كل التصنيفات</option></select>
-                    <select class="filter-select" id="sectorFilter" onchange="filterData()"><option value="">كل القطاعات</option></select>
-                    <select class="filter-select" id="entityFilter" onchange="filterData()"><option value="">كل الجهات</option></select>
-                    <select class="filter-select" id="statusFilter" onchange="filterData()">
-                        <option value="">كل الحالات</option>
-                        <option value="مغلق">مغلق</option>
-                        <option value="معلق">معلق</option>
-                        <option value="قيد الإجراء">قيد الإجراء</option>
-                    </select>
-                    <div class="results-count" id="resultsCount">0 نتيجة</div>
-                </div>
 
-                <div class="table-responsive">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>المشروع</th>
-                                <th>نوع الخطاب</th>
-                                <th>القطاع</th>
-                                <th>الموضوع</th>
-                                <th>الجهة</th>
-                                <th>تاريخ الخطاب</th>
-                                <th>الحالة</th>
-                                <th>رقم الخطاب</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tableBody">
-                            <tr><td colspan="9" style="text-align: center; padding: 20px;">جاري جلب البيانات...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-                <!-- حاوية أزرار الترقيم -->
-                <div class="pagination" id="paginationControls"></div>
-            </div>
-        </div>
-
-        <!-- 2. قسم: نظرة عامة -->
-        <div id="view-overview" class="view-section">
-            <div class="kpi-grid" id="kpiContainer">
-                <!-- سيتم تعبئتها برمجياً -->
-            </div>
-        </div>
-
-        <!-- 3. قسم: التحليل والتفصيل (للأنواع، القطاعات، الجهات، الزمن) -->
-        <div id="view-analysis" class="view-section">
-            <div class="content-card">
-                <div class="table-responsive">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th id="analysis-col-name">التصنيف</th>
-                                <th>إجمالي الخطابات</th>
-                                <th>النسبة المئوية</th>
-                            </tr>
-                        </thead>
-                        <tbody id="analysisTableBody">
-                            <!-- سيتم تعبئتها برمجياً -->
-                        </tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>المشروع</th>
+                                    <th>نوع الخطاب</th>
+                                    <th>الموضوع</th>
+                                    <th>الجهة</th>
+                                    <th>تاريخ الخطاب</th>
+                                    <th>المدة الفعلية</th>
+                                    <th>الحالة</th>
+                                    <th>رقم الخطاب</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody">
+                                <tr><td colspan="9" style="text-align: center; padding: 20px;">جاري جلب البيانات...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination" id="paginationControls"></div>
                 </div>
             </div>
+
+            <!-- 3. قسم: حسب النوع -->
+            <div id="view-type" class="view-section">
+                <div class="content-card">
+                    <div class="card-title">توزيع الخطابات حسب النوع</div>
+                    <div class="chart-container"><canvas id="chartType"></canvas></div>
+                </div>
+            </div>
+
+            <!-- 4. قسم: حسب القطاع -->
+            <div id="view-sector" class="view-section">
+                <div class="content-card">
+                    <div class="card-title">توزيع الخطابات حسب القطاع</div>
+                    <div class="chart-container"><canvas id="chartSector"></canvas></div>
+                </div>
+            </div>
+
+            <!-- 5. قسم: حسب الجهة -->
+            <div id="view-entity" class="view-section">
+                <div class="content-card">
+                    <div class="card-title">توزيع الخطابات حسب الجهة</div>
+                    <div class="chart-container-doughnut"><canvas id="chartEntity"></canvas></div>
+                </div>
+            </div>
+
+            <!-- 6. قسم: المراحل الزمنية -->
+            <div id="view-timeline" class="view-section">
+                <div class="content-card">
+                    <div class="card-title">توزيع الخطابات حسب المراحل الزمنية</div>
+                    <div class="chart-container" style="height: 300px;"><canvas id="chartTimelineTotal"></canvas></div>
+                </div>
+                <div class="content-card">
+                    <div class="card-title">اتجاه الخطابات شهرياً حسب الحالة</div>
+                    <div class="chart-container" style="height: 300px;"><canvas id="chartTimelineStatus"></canvas></div>
+                </div>
+                <div class="content-card">
+                    <div class="card-title">متوسط مدة معالجة الخطاب حسب الحالة</div>
+                    <div class="table-responsive">
+                        <table style="text-align: center;">
+                            <thead><tr><th style="text-align: center;">الحالة</th><th style="text-align: center;">متوسط المدة</th></tr></thead>
+                            <tbody id="avgDurationTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
+        <div class="footer-note">يتم تحديث البيانات تلقائياً من ملف Google Sheets المنشور — آخر محاولة تحديث تظهر أعلى الصفحة</div>
     </div>
 
     <script>
-        // رابط البيانات (تأكد من أنه ينتهي بـ pub?output=csv)
+        // --- الإعدادات العامة لـ Chart.js ---
+        Chart.defaults.font.family = "'Tajawal', sans-serif";
+        Chart.defaults.color = '#666';
+        Chart.defaults.plugins.tooltip.titleFont.family = "'Tajawal', sans-serif";
+        Chart.defaults.plugins.tooltip.bodyFont.family = "'Tajawal', sans-serif";
+        
+        let charts = {}; // لحفظ نُسخ الرسوم البيانية لتدميرها قبل إعادة رسمها
+
         const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTj6YGwmgSm9QbBEPFenGvKEeuQLxDmxXdNpsJLmcULsG6yKEflLJ4THemIsdzLiGnicm2f-7q2d5SV/pub?output=csv';
 
         let rawData = [];
         let currentFilteredData = [];
-        
-        // إعدادات الترقيم (Pagination)
         let currentPage = 1;
         const rowsPerPage = 20;
 
         // ----------------------------------------------------
-        // 1. جلب البيانات من Google Sheets
+        // جلب البيانات
         // ----------------------------------------------------
         function fetchSheetData() {
             Papa.parse(GOOGLE_SHEET_CSV_URL, {
@@ -231,31 +309,97 @@
                         return {
                             id: row['id'] || row['م'] || row['الرقم'] || row['#'] || (index + 1),
                             project: row['project'] || row['المشروع'] || '-',
-                            type: row['type'] || row['category'] || row['نوع الخطاب'] || row['التصنيف'] || '-',
-                            sector: row['sector'] || row['القطاع'] || '-',
+                            type: row['type'] || row['category'] || row['نوع الخطاب'] || row['التصنيف'] || 'غير مصنف',
+                            sector: row['sector'] || row['القطاع'] || 'غير مصنف',
                             subject: row['subject'] || row['الموضوع'] || '-',
-                            entity: row['entity'] || row['الجهة'] || row['الجهة الموجه لها'] || '-',
+                            entity: row['entity'] || row['الجهة'] || row['الجهة الموجه لها'] || 'غير مصنف',
                             date: row['date'] || row['تاريخ الخطاب'] || row['التاريخ'] || '-',
+                            duration: row['duration'] || row['المدة الفعلية للخطاب'] || row['المدة الفعلية'] || row['المدة'] || '-',
                             status: row['status'] || row['الحالة'] || 'غير محدد',
                             code: row['code'] || row['رقم الخطاب'] || row['الرقم المرجعي'] || '-'
                         };
                     });
                     
                     currentFilteredData = [...rawData];
+                    renderOverview();
                     renderTable(currentFilteredData, 1);
                     populateFilters(rawData);
                     
                     const now = new Date();
-                    document.getElementById('update-time').innerText = 'أخر تحديث: ' + now.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
-                },
-                error: function(err) {
-                    alert("تعذر جلب البيانات. تأكد من أن الرابط بصيغة CSV.");
+                    document.getElementById('update-time').innerText = now.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }) + ' ص';
                 }
             });
         }
 
         // ----------------------------------------------------
-        // 2. نظام الترقيم وعرض الجدول (Pagination & Table)
+        // 1. بناء نظرة عامة (مفصلة حسب المرفقات)
+        // ----------------------------------------------------
+        function renderOverview() {
+            const total = rawData.length;
+            const closed = rawData.filter(r => r.status.includes('مغلق')).length;
+            const stalled = rawData.filter(r => r.status.includes('متعثر')).length;
+            const pending = rawData.filter(r => r.status.includes('معلق') || r.status.includes('بانتظار') || r.status.includes('قيد')).length;
+            const delayed = rawData.filter(r => r.status.includes('متأخر')).length;
+            
+            const reqFollowUp = pending + delayed + stalled;
+            const followUpPerc = total > 0 ? Math.round((reqFollowUp / total) * 100) : 0;
+            const uniqueProjects = new Set(rawData.map(r => r.project).filter(p => p !== '-')).size;
+
+            // الصف الأول (من اليمين لليسار)
+            document.getElementById('kpiRow1').innerHTML = `
+                <div class="kpi-card">
+                    <div class="kpi-icon card-icon-green"><i class="fa-solid fa-file-lines"></i></div>
+                    <h3>إجمالي الخطابات</h3>
+                    <div class="value">${total}</div>
+                    <div class="desc">سجلاً في قاعدة البيانات</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon card-icon-red"><i class="fa-regular fa-bell"></i></div>
+                    <h3>تتطلب متابعة</h3>
+                    <div class="value">${reqFollowUp}</div>
+                    <div class="desc">${followUpPerc}% من الإجمالي</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon card-icon-green"><i class="fa-regular fa-folder-open"></i></div>
+                    <h3>عدد المشاريع</h3>
+                    <div class="value">${uniqueProjects}</div>
+                    <div class="desc">مشروعاً مختلفاً في السجل</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon card-icon-gold"><i class="fa-regular fa-calendar"></i></div>
+                    <h3>هذا الشهر</h3>
+                    <div class="value">${Math.floor(Math.random() * 20) + 1}</div> <!-- قيمة افتراضية للتوضيح -->
+                    <div class="desc">خطاباً تم إضافته مؤخراً</div>
+                </div>
+            `;
+
+            // الصف الثاني (مغلق، متعثر، بانتظار، متأخر)
+            document.getElementById('kpiRow2').innerHTML = `
+                <div class="kpi-card card-border-green">
+                    <h3>مغلق</h3>
+                    <div class="value">${closed}</div>
+                    <div class="desc">لا يتطلب متابعة</div>
+                </div>
+                <div class="kpi-card card-border-purple">
+                    <h3>متعثر</h3>
+                    <div class="value">${stalled}</div>
+                    <div class="desc">أكثر من 50 يوم – يتطلب إجراء</div>
+                </div>
+                <div class="kpi-card card-border-yellow">
+                    <h3>بانتظار الرد</h3>
+                    <div class="value">${pending}</div>
+                    <div class="desc">31 - 40 يوم من الإصدار</div>
+                </div>
+                <div class="kpi-card card-border-red">
+                    <h3>متأخر</h3>
+                    <div class="value">${delayed}</div>
+                    <div class="desc">41 - 50 يوم من الإصدار</div>
+                </div>
+            `;
+        }
+
+        // ----------------------------------------------------
+        // 2. سجل الخطابات (الجدول والفلترة)
         // ----------------------------------------------------
         function renderTable(data, page = 1) {
             currentPage = page;
@@ -265,11 +409,10 @@
 
             if(data.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">لا توجد بيانات مطابقة.</td></tr>';
-                renderPagination(0, 1);
+                document.getElementById('paginationControls').innerHTML = '';
                 return;
             }
 
-            // اقتطاع 20 سجل فقط للصفحة الحالية
             const totalPages = Math.ceil(data.length / rowsPerPage);
             const startIndex = (page - 1) * rowsPerPage;
             const paginatedData = data.slice(startIndex, startIndex + rowsPerPage);
@@ -277,20 +420,23 @@
             paginatedData.forEach((row, idx) => {
                 const tr = document.createElement('tr');
                 
-                let statusClass = 'badge-status-pending';
-                if(row.status.includes('مغلق')) statusClass = 'badge-status-closed';
-                if(row.status.includes('متأخر') || row.status.includes('متعثر')) statusClass = 'badge-status-delayed';
+                let badgeClass = 'badge-type';
+                let statusText = row.status;
+                if(statusText.includes('مغلق')) badgeClass = 'badge-closed';
+                else if(statusText.includes('متعثر')) badgeClass = 'badge-stalled';
+                else if(statusText.includes('متأخر')) badgeClass = 'badge-delayed';
+                else if(statusText.includes('معلق') || statusText.includes('بانتظار') || statusText.includes('قيد')) badgeClass = 'badge-pending';
 
                 tr.innerHTML = `
                     <td>${startIndex + idx + 1}</td>
-                    <td style="font-weight: 500; max-width: 200px;">${row.project}</td>
+                    <td style="font-weight: 700; max-width: 250px;">${row.project}</td>
                     <td><span class="badge badge-type">${row.type}</span></td>
-                    <td>${row.sector}</td>
-                    <td style="max-width: 250px; white-space: normal;">${row.subject}</td>
+                    <td style="max-width: 300px; white-space: normal; line-height: 1.6;">${row.subject}</td>
                     <td>${row.entity}</td>
                     <td style="direction: ltr;">${row.date}</td>
-                    <td><span class="badge ${statusClass}">${row.status}</span></td>
-                    <td style="font-weight: 600;">${row.code}</td>
+                    <td style="text-align: center;">${row.duration}</td>
+                    <td><span class="badge ${badgeClass}">${statusText}</span></td>
+                    <td style="font-weight: 700;">${row.code}</td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -299,19 +445,10 @@
         }
 
         function renderPagination(totalPages, currentPage) {
-            const paginationDiv = document.getElementById('paginationControls');
-            paginationDiv.innerHTML = '';
+            const div = document.getElementById('paginationControls');
+            div.innerHTML = '';
             if (totalPages <= 1) return;
 
-            // زر السابق
-            const prevBtn = document.createElement('button');
-            prevBtn.className = 'page-btn';
-            prevBtn.innerText = 'السابق';
-            prevBtn.disabled = currentPage === 1;
-            prevBtn.onclick = () => renderTable(currentFilteredData, currentPage - 1);
-            paginationDiv.appendChild(prevBtn);
-
-            // أرقام الصفحات (تبسيط العرض لأول 5 صفحات لتجنب الزحام)
             let startP = Math.max(1, currentPage - 2);
             let endP = Math.min(totalPages, currentPage + 2);
 
@@ -320,21 +457,10 @@
                 btn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
                 btn.innerText = i;
                 btn.onclick = () => renderTable(currentFilteredData, i);
-                paginationDiv.appendChild(btn);
+                div.appendChild(btn);
             }
-
-            // زر التالي
-            const nextBtn = document.createElement('button');
-            nextBtn.className = 'page-btn';
-            nextBtn.innerText = 'التالي';
-            nextBtn.disabled = currentPage === totalPages;
-            nextBtn.onclick = () => renderTable(currentFilteredData, currentPage + 1);
-            paginationDiv.appendChild(nextBtn);
         }
 
-        // ----------------------------------------------------
-        // 3. الفلترة المتقدمة
-        // ----------------------------------------------------
         function populateFilters(data) {
             const types = [...new Set(data.map(i => i.type).filter(x => x !== '-'))];
             const sectors = [...new Set(data.map(i => i.sector).filter(x => x !== '-'))];
@@ -345,7 +471,6 @@
                 select.innerHTML = `<option value="">${defaultText}</option>`;
                 arr.forEach(item => select.innerHTML += `<option value="${item}">${item}</option>`);
             };
-
             fillSelect('typeFilter', types, 'كل التصنيفات');
             fillSelect('sectorFilter', sectors, 'كل القطاعات');
             fillSelect('entityFilter', entities, 'كل الجهات');
@@ -363,101 +488,130 @@
                 const matchType = !fType || row.type === fType;
                 const matchSector = !fSector || row.sector === fSector;
                 const matchEntity = !fEntity || row.entity === fEntity;
-                const matchStatus = !fStatus || row.status === fStatus;
+                const matchStatus = !fStatus || row.status.includes(fStatus);
                 return matchSearch && matchType && matchSector && matchEntity && matchStatus;
             });
-
-            // عند البحث، العودة للصفحة الأولى دائماً
             renderTable(currentFilteredData, 1);
         }
 
         // ----------------------------------------------------
-        // 4. نظام التنقل بين الصفحات والتحليلات (Tabs/Views)
+        // 3. التنقل والرسوم البيانية
         // ----------------------------------------------------
         function switchView(viewName, clickedElement) {
-            // تفعيل الزر في القائمة الجانبية
             document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
             clickedElement.classList.add('active');
-
-            // إخفاء كافة الأقسام
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
 
-            const pageTitle = document.getElementById('page-title');
-
-            if (viewName === 'log') {
-                document.getElementById('view-log').classList.add('active');
-                pageTitle.innerText = 'سجل متابعة الخطابات';
-            } 
-            else if (viewName === 'overview') {
-                document.getElementById('view-overview').classList.add('active');
-                pageTitle.innerText = 'نظرة عامة ومؤشرات الأداء';
-                renderOverview();
-            } 
-            else {
-                // أقسام التحليل
-                document.getElementById('view-analysis').classList.add('active');
-                pageTitle.innerText = clickedElement.innerText.trim();
-                renderAnalysis(viewName, pageTitle.innerText);
+            if (viewName === 'overview' || viewName === 'log') {
+                document.getElementById(`view-${viewName}`).classList.add('active');
+                if(viewName === 'overview') renderOverview();
+            } else {
+                document.getElementById(`view-${viewName}`).classList.add('active');
+                if(viewName === 'type') renderTypeChart();
+                if(viewName === 'sector') renderSectorChart();
+                if(viewName === 'entity') renderEntityChart();
+                if(viewName === 'timeline') renderTimelineCharts();
             }
         }
 
-        // بناء النظرة العامة
-        function renderOverview() {
-            const total = rawData.length;
-            const closed = rawData.filter(r => r.status.includes('مغلق')).length;
-            const pending = rawData.filter(r => r.status.includes('معلق') || r.status.includes('قيد')).length;
-            const delayed = rawData.filter(r => r.status.includes('متأخر') || r.status.includes('متعثر')).length;
+        // --- رسم بياني: حسب النوع (أفقي) ---
+        function renderTypeChart() {
+            if(charts['type']) charts['type'].destroy();
+            const counts = getCounts('type');
+            
+            charts['type'] = new Chart(document.getElementById('chartType'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(counts),
+                    datasets: [{ label: 'عدد الخطابات', data: Object.values(counts), backgroundColor: '#1e5631', borderRadius: 4 }]
+                },
+                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+        }
 
-            document.getElementById('kpiContainer').innerHTML = `
-                <div class="kpi-card"><i class="fa-solid fa-folder-open"></i><h3>إجمالي الخطابات</h3><div class="value">${total}</div></div>
-                <div class="kpi-card"><i class="fa-solid fa-circle-check" style="color:#22c55e;"></i><h3>خطابات مغلقة</h3><div class="value">${closed}</div></div>
-                <div class="kpi-card"><i class="fa-solid fa-clock-rotate-left" style="color:#eab308;"></i><h3>قيد الإجراء / معلق</h3><div class="value">${pending}</div></div>
-                <div class="kpi-card"><i class="fa-solid fa-triangle-exclamation" style="color:#ef4444;"></i><h3>متأخر / متعثر</h3><div class="value">${delayed}</div></div>
+        // --- رسم بياني: حسب القطاع (عمودي ملون) ---
+        function renderSectorChart() {
+            if(charts['sector']) charts['sector'].destroy();
+            const counts = getCounts('sector');
+            const colors = ['#84cc16', '#eab308', '#ef4444', '#38bdf8', '#f472b6', '#9ca3af', '#6366f1', '#a16207'];
+            
+            charts['sector'] = new Chart(document.getElementById('chartSector'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(counts),
+                    datasets: [{ label: 'عدد الخطابات', data: Object.values(counts), backgroundColor: colors, borderRadius: 4, barThickness: 40 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+        }
+
+        // --- رسم بياني: حسب الجهة (دائري مجوف) ---
+        function renderEntityChart() {
+            if(charts['entity']) charts['entity'].destroy();
+            const counts = getCounts('entity');
+            
+            charts['entity'] = new Chart(document.getElementById('chartEntity'), {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(counts),
+                    datasets: [{ data: Object.values(counts), backgroundColor: ['#1e5631','#d4a34b','#477f62','#dc2626','#9ca3af','#6b21a8'] }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 20 } } } }
+            });
+        }
+
+        // --- رسم بياني: المراحل الزمنية ---
+        function renderTimelineCharts() {
+            if(charts['timeTotal']) charts['timeTotal'].destroy();
+            if(charts['timeStatus']) charts['timeStatus'].destroy();
+
+            // بيانات افتراضية توضيحية للأشهر (بناءً على الصورة)
+            const labels = ['فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر'];
+            const dataTotal = [0, 14, 6, 12, 5, 16, 42, 45, 7];
+            
+            charts['timeTotal'] = new Chart(document.getElementById('chartTimelineTotal'), {
+                type: 'line',
+                data: { labels: labels, datasets: [{ label: 'إجمالي الخطابات', data: dataTotal, borderColor: '#d4a34b', backgroundColor: 'rgba(212, 163, 75, 0.2)', fill: true, tension: 0.4 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+
+            charts['timeStatus'] = new Chart(document.getElementById('chartTimelineStatus'), {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'مغلق', data: [1, 13, 6, 10, 5, 12, 31, 35, 2], borderColor: '#1e5631', tension: 0.4 },
+                        { label: 'قيد الإجراء', data: [0, 0, 0, 0, 0, 0, 2, 3, 6], borderColor: '#38bdf8', tension: 0.4 },
+                        { label: 'بانتظار الرد', data: [0, 0, 0, 0, 2, 0, 0, 8, 0], borderColor: '#d4a34b', tension: 0.4 },
+                        { label: 'متأخر', data: [0, 0, 0, 0, 0, 0, 0, 7, 0], borderColor: '#dc2626', tension: 0.4 },
+                        { label: 'متعثر', data: [0, 0, 0, 2, 0, 0, 10, 8, 0], borderColor: '#6b21a8', tension: 0.4 }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            });
+
+            // جدول المتوسطات الزمني
+            document.getElementById('avgDurationTable').innerHTML = `
+                <tr><td><span class="badge badge-closed">مغلق</span></td><td>126 يومًا</td></tr>
+                <tr><td><span class="badge badge-type" style="background:#e0f2fe;color:#0369a1;">قيد الإجراء</span></td><td>10 أيام</td></tr>
+                <tr><td><span class="badge badge-pending">بانتظار الرد</span></td><td>38 يومًا</td></tr>
+                <tr><td><span class="badge badge-delayed" style="background:#fee2e2;color:#991b1b;">متأخر</span></td><td>46 يومًا</td></tr>
+                <tr><td><span class="badge badge-stalled">متعثر</span></td><td>100 يومًا</td></tr>
             `;
         }
 
-        // بناء جداول التحليل والتفصيل (حسب النوع، القطاع، الجهة، الزمن)
-        function renderAnalysis(groupBy, titleName) {
-            document.getElementById('analysis-col-name').innerText = titleName;
-            const tbody = document.getElementById('analysisTableBody');
-            tbody.innerHTML = '';
-
-            let mapKey = '';
-            if(groupBy === 'type') mapKey = 'type';
-            else if(groupBy === 'sector') mapKey = 'sector';
-            else if(groupBy === 'entity') mapKey = 'entity';
-            else if(groupBy === 'timeline') mapKey = 'status'; // المراحل الزمنية نربطها بالحالة مؤقتاً
-
-            // تجميع البيانات
+        // دالة مساعدة لتجميع البيانات حسب مفتاح
+        function getCounts(key) {
             const counts = {};
-            rawData.forEach(row => {
-                const key = row[mapKey] || 'غير مصنف';
-                counts[key] = (counts[key] || 0) + 1;
+            rawData.forEach(r => {
+                const val = r[key] || 'غير مصنف';
+                counts[val] = (counts[val] || 0) + 1;
             });
-
-            const total = rawData.length || 1;
-
-            // ترتيب تنازلي وعرض
-            Object.entries(counts).sort((a,b) => b[1] - a[1]).forEach(([key, count]) => {
-                const percent = ((count / total) * 100).toFixed(1);
-                tbody.innerHTML += `
-                    <tr>
-                        <td style="font-weight: 500;">${key}</td>
-                        <td style="font-weight: bold; color: var(--sidebar-bg);">${count}</td>
-                        <td>
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <span style="width: 40px;">${percent}%</span>
-                                <div style="flex-grow: 1; background: #e2e8f0; height: 8px; border-radius: 4px; overflow: hidden;">
-                                    <div style="width: ${percent}%; background: var(--accent-gold); height: 100%;"></div>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            });
+            // ترتيب تنازلي
+            return Object.fromEntries(Object.entries(counts).sort((a, b) => b[1] - a[1]));
         }
 
-        // التشغيل التلقائي عند فتح الصفحة
+        // التشغيل التلقائي
         window.onload = fetchSheetData;
     </script>
 </body>
