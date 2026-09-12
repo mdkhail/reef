@@ -4,12 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>سجل متابعة الخطابات - برنامج ريف السعودية</title>
-    <!-- خط تجوال/القاهرة ليعطي نفس المظهر العالي الجودة -->
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
-    <!-- مكتبة FontAwesome للأيقونات -->
-    <!-- استبدل رابط FontAwesome القديم بهذا الرابط السليم -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- مكتبة PapaParse لقراءة ملف Google Sheets CSV بسهولة -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
 
     <style>
@@ -24,299 +20,75 @@
             --border-color: #e5e9e3;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Tajawal', sans-serif;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Tajawal', sans-serif; }
+        body { background-color: var(--main-bg); color: var(--text-main); display: flex; min-height: 100vh; }
 
-        body {
-            background-color: var(--main-bg);
-            color: var(--text-main);
-            display: flex;
-            min-height: 100vh;
-        }
+        /* --- الشريط الجانبي --- */
+        .sidebar { width: 260px; background-color: var(--sidebar-bg); color: #ffffff; display: flex; flex-direction: column; flex-shrink: 0; }
+        .sidebar-header { padding: 25px 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .sidebar-header h2 { font-size: 22px; font-weight: 700; color: #fff; }
+        .sidebar-header span { display: block; font-size: 11px; color: var(--accent-gold); margin-top: 4px; }
+        .sidebar-menu { padding: 20px 0; list-style: none; }
+        .menu-title { font-size: 12px; color: rgba(255,255,255,0.5); padding: 10px 25px; text-transform: uppercase; }
+        .menu-item { display: flex; align-items: center; padding: 12px 25px; color: #d1d5db; text-decoration: none; font-size: 14px; transition: all 0.2s; cursor: pointer; }
+        .menu-item i { margin-left: 12px; width: 18px; text-align: center; }
+        .menu-item:hover { background-color: var(--sidebar-hover); color: #fff; }
+        .menu-item.active { background-color: var(--accent-gold); color: #113322; font-weight: 700; border-radius: 8px 0 0 8px; margin-right: 10px; }
 
-        /* --- الشريط الجانبي (Sidebar) --- */
-        .sidebar {
-            width: 260px;
-            background-color: var(--sidebar-bg);
-            color: #ffffff;
-            display: flex;
-            flex-direction: column;
-            flex-shrink: 0;
-        }
+        /* --- المحتوى الرئيسي --- */
+        .main-content { flex-grow: 1; padding: 25px 35px; overflow-y: auto; height: 100vh; }
+        .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; }
+        .header-title h1 { font-size: 24px; font-weight: 700; color: #1a202c; }
+        .header-title p { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+        .header-actions { display: flex; align-items: center; gap: 12px; }
+        .last-update { font-size: 12px; color: var(--text-muted); background: #eef2eb; padding: 6px 12px; border-radius: 20px; display: flex; align-items: center; gap: 6px; }
+        .last-update-dot { width: 8px; height: 8px; background-color: #22c55e; border-radius: 50%; }
+        .btn { padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; border: 1px solid transparent; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s; }
+        .btn-outline { background: #fff; border-color: #cbd5e1; color: #475569; }
+        .btn-outline:hover { background: #f8fafc; }
+        .btn-primary { background: #1e5338; color: #fff; }
+        .btn-primary:hover { background: #143828; }
 
-        .sidebar-header {
-            padding: 25px 20px;
-            text-align: center;
-            border-bottom: 1px solid rgba(255,255,255,0.08);
-        }
-
-        .sidebar-header h2 {
-            font-size: 22px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            color: #fff;
-        }
-
-        .sidebar-header span {
-            display: block;
-            font-size: 11px;
-            color: var(--accent-gold);
-            margin-top: 4px;
-        }
-
-        .sidebar-menu {
-            padding: 20px 0;
-            list-style: none;
-        }
-
-        .menu-title {
-            font-size: 12px;
-            color: rgba(255,255,255,0.5);
-            padding: 10px 25px;
-            text-transform: uppercase;
-        }
-
-        .menu-item {
-            display: flex;
-            align-items: center;
-            padding: 12px 25px;
-            color: #d1d5db;
-            text-decoration: none;
-            font-size: 14px;
-            transition: all 0.2s;
-            cursor: pointer;
-        }
-
-        .menu-item i {
-            margin-left: 12px;
-            width: 18px;
-            text-align: center;
-        }
-
-        .menu-item:hover {
-            background-color: var(--sidebar-hover);
-            color: #fff;
-        }
-
-        .menu-item.active {
-            background-color: var(--accent-gold);
-            color: #113322;
-            font-weight: 700;
-            border-radius: 8px 0 0 8px;
-            margin-right: 10px;
-        }
-
-        /* --- المحتوى الرئيسي (Main Area) --- */
-        .main-content {
-            flex-grow: 1;
-            padding: 25px 35px;
-            overflow-y: auto;
-        }
-
-        /* الهيدر العلوي */
-        .top-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            border-bottom: 2px solid #e2e8f0;
-            padding-bottom: 15px;
-        }
-
-        .header-title h1 {
-            font-size: 24px;
-            font-weight: 700;
-            color: #1a202c;
-        }
-
-        .header-title p {
-            font-size: 13px;
-            color: var(--text-muted);
-            margin-top: 4px;
-        }
-
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .last-update {
-            font-size: 12px;
-            color: var(--text-muted);
-            background: #eef2eb;
-            padding: 6px 12px;
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .last-update-dot {
-            width: 8px;
-            height: 8px;
-            background-color: #22c55e;
-            border-radius: 50%;
-        }
-
-        .btn {
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 600;
-            border: 1px solid transparent;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: 0.2s;
-        }
-
-        .btn-outline {
-            background: #fff;
-            border-color: #cbd5e1;
-            color: #475569;
-        }
-
-        .btn-outline:hover {
-            background: #f8fafc;
-        }
-
-        .btn-primary {
-            background: #1e5338;
-            color: #fff;
-        }
-
-        .btn-primary:hover {
-            background: #143828;
-        }
+        /* الأقسام والتبويبات */
+        .view-section { display: none; animation: fadeIn 0.3s ease; }
+        .view-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
         /* كارت البيانات والجدول */
-        .content-card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-            border: 1px solid var(--border-color);
-            padding: 20px;
-        }
+        .content-card { background: var(--card-bg); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid var(--border-color); padding: 20px; }
+        .filter-bar { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; align-items: center; }
+        .search-box { position: relative; flex-grow: 2; min-width: 250px; }
+        .search-box input { width: 100%; padding: 9px 38px 9px 15px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; outline: none; background-color: #f8fafc; }
+        .search-box i { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
+        .filter-select { padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; color: #334155; background-color: #f8fafc; outline: none; cursor: pointer; min-width: 130px; }
+        .results-count { margin-right: auto; font-size: 13px; color: var(--text-muted); font-weight: 500; }
 
-        /* شريط الفلاتر والبحث */
-        .filter-bar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-bottom: 20px;
-            align-items: center;
-        }
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: right; font-size: 13px; }
+        th { background-color: #f8fafc; color: #475569; font-weight: 700; padding: 12px 10px; border-bottom: 2px solid var(--border-color); white-space: nowrap; }
+        td { padding: 14px 10px; border-bottom: 1px solid var(--border-color); color: #334155; vertical-align: middle; }
+        tr:hover td { background-color: #f8fafc; }
 
-        .search-box {
-            position: relative;
-            flex-grow: 2;
-            min-width: 250px;
-        }
+        /* الشارات */
+        .badge { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; display: inline-block; }
+        .badge-type { background-color: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+        .badge-status-closed { background-color: #dcfce7; color: #166534; }
+        .badge-status-pending { background-color: #fef9c3; color: #854d0e; }
+        .badge-status-delayed { background-color: #fee2e2; color: #991b1b; }
 
-        .search-box input {
-            width: 100%;
-            padding: 9px 38px 9px 15px;
-            border: 1px solid #cbd5e1;
-            border-radius: 8px;
-            font-size: 13px;
-            outline: none;
-            background-color: #f8fafc;
-        }
+        /* الترقيم (Pagination) */
+        .pagination { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color); }
+        .page-btn { padding: 6px 12px; border: 1px solid #cbd5e1; background: #fff; border-radius: 6px; cursor: pointer; font-size: 13px; color: #334155; transition: 0.2s; }
+        .page-btn:hover:not(:disabled) { background: #f8fafc; }
+        .page-btn.active { background: var(--sidebar-bg); color: #fff; border-color: var(--sidebar-bg); font-weight: bold; }
+        .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        .search-box i {
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #94a3b8;
-        }
-
-        .filter-select {
-            padding: 9px 12px;
-            border: 1px solid #cbd5e1;
-            border-radius: 8px;
-            font-size: 13px;
-            color: #334155;
-            background-color: #f8fafc;
-            outline: none;
-            cursor: pointer;
-            min-width: 130px;
-        }
-
-        .results-count {
-            margin-right: auto;
-            font-size: 13px;
-            color: var(--text-muted);
-            font-weight: 500;
-        }
-
-        /* الجدول */
-        .table-responsive {
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: right;
-            font-size: 13px;
-        }
-
-        th {
-            background-color: #f8fafc;
-            color: #475569;
-            font-weight: 700;
-            padding: 12px 10px;
-            border-bottom: 2px solid var(--border-color);
-            white-space: nowrap;
-        }
-
-        td {
-            padding: 14px 10px;
-            border-bottom: 1px solid var(--border-color);
-            color: #334155;
-            vertical-align: middle;
-        }
-
-        tr:hover td {
-            background-color: #f8fafc;
-        }
-
-        /* الشارات (Badges) */
-        .badge {
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
-            display: inline-block;
-        }
-
-        .badge-type {
-            background-color: #f1f5f9;
-            color: #475569;
-            border: 1px solid #e2e8f0;
-        }
-
-        .badge-status-closed {
-            background-color: #dcfce7;
-            color: #166534;
-        }
-
-        .badge-status-pending {
-            background-color: #fef9c3;
-            color: #854d0e;
-        }
-
-        .badge-status-delayed {
-            background-color: #fee2e2;
-            color: #991b1b;
-        }
+        /* مؤشرات نظرة عامة (KPIs) */
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 25px; }
+        .kpi-card { background: #fff; padding: 25px; border-radius: 12px; border: 1px solid var(--border-color); text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
+        .kpi-card i { font-size: 28px; color: var(--accent-gold); margin-bottom: 12px; }
+        .kpi-card h3 { font-size: 14px; color: var(--text-muted); margin-bottom: 10px; font-weight: 500;}
+        .kpi-card .value { font-size: 32px; font-weight: 700; color: var(--sidebar-bg); }
     </style>
 </head>
 <body>
@@ -331,16 +103,16 @@
         
         <ul class="sidebar-menu">
             <li class="menu-title">لوحات عامة</li>
-            <li><a class="menu-item"><i class="fa-solid fa-chart-pie"></i> نظرة عامة</a></li>
+            <li><a class="menu-item" onclick="switchView('overview', this)"><i class="fa-solid fa-chart-pie"></i> نظرة عامة</a></li>
 
             <li class="menu-title">إدارة الخطابات</li>
-            <li><a class="menu-item active"><i class="fa-regular fa-folder-open"></i> سجل الخطابات</a></li>
+            <li><a class="menu-item active" onclick="switchView('log', this)"><i class="fa-regular fa-folder-open"></i> سجل الخطابات</a></li>
 
             <li class="menu-title">تحليل وتفصيل</li>
-            <li><a class="menu-item"><i class="fa-solid fa-list-check"></i> حسب النوع</a></li>
-            <li><a class="menu-item"><i class="fa-solid fa-sitemap"></i> حسب القطاع</a></li>
-            <li><a class="menu-item"><i class="fa-solid fa-building"></i> حسب الجهة</a></li>
-            <li><a class="menu-item"><i class="fa-regular fa-clock"></i> المراحل الزمنية</a></li>
+            <li><a class="menu-item" onclick="switchView('type', this)"><i class="fa-solid fa-list-check"></i> حسب النوع</a></li>
+            <li><a class="menu-item" onclick="switchView('sector', this)"><i class="fa-solid fa-sitemap"></i> حسب القطاع</a></li>
+            <li><a class="menu-item" onclick="switchView('entity', this)"><i class="fa-solid fa-building"></i> حسب الجهة</a></li>
+            <li><a class="menu-item" onclick="switchView('timeline', this)"><i class="fa-regular fa-clock"></i> المراحل الزمنية</a></li>
         </ul>
     </div>
 
@@ -349,206 +121,344 @@
         <!-- الهيدر العلوي -->
         <div class="top-header">
             <div class="header-title">
-                <h1>سجل متابعة الخطابات</h1>
+                <h1 id="page-title">سجل متابعة الخطابات</h1>
                 <p>لوحة معلومات تنفيذية تتحدث تلقائياً من قاعدة بيانات الخطابات — برنامج ريف السعودية</p>
             </div>
             <div class="header-actions">
                 <div class="last-update">
                     <span class="last-update-dot"></span>
-                    <span id="update-time">أخر تحديث: الآن</span>
+                    <span id="update-time">أخر تحديث: جاري التحميل...</span>
                 </div>
-                <button class="btn btn-outline"><i class="fa-solid fa-file-export"></i> إنشاء تقرير</button>
-                <button class="btn btn-primary" onclick="fetchSheetData()"><i class="fa-solid fa-rotate"></i> تحديث الآن</button>
+                <button class="btn btn-primary" onclick="fetchSheetData()"><i class="fa-solid fa-rotate"></i> تحديث البيانات</button>
             </div>
         </div>
 
-        <!-- كارت المحتوى الرئيسي -->
-        <div class="content-card">
-            <!-- شريط الفلاتر -->
-            <div class="filter-bar">
-                <div class="search-box">
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" id="searchInput" onkeyup="filterData()" placeholder="ابحث بالمشروع، الموضوع، الجهة...">
+        <!-- 1. قسم: سجل الخطابات (الرئيسي) -->
+        <div id="view-log" class="view-section active">
+            <div class="content-card">
+                <div class="filter-bar">
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="searchInput" onkeyup="filterData()" placeholder="ابحث بالمشروع، الموضوع، الجهة، أو الرقم...">
+                    </div>
+                    <select class="filter-select" id="typeFilter" onchange="filterData()"><option value="">كل التصنيفات</option></select>
+                    <select class="filter-select" id="sectorFilter" onchange="filterData()"><option value="">كل القطاعات</option></select>
+                    <select class="filter-select" id="entityFilter" onchange="filterData()"><option value="">كل الجهات</option></select>
+                    <select class="filter-select" id="statusFilter" onchange="filterData()">
+                        <option value="">كل الحالات</option>
+                        <option value="مغلق">مغلق</option>
+                        <option value="معلق">معلق</option>
+                        <option value="قيد الإجراء">قيد الإجراء</option>
+                    </select>
+                    <div class="results-count" id="resultsCount">0 نتيجة</div>
                 </div>
 
-                <select class="filter-select" id="typeFilter" onchange="filterData()">
-                    <option value="">كل التصنيفات</option>
-                </select>
-
-                <select class="filter-select" id="sectorFilter" onchange="filterData()">
-                    <option value="">كل القطاعات</option>
-                </select>
-
-                <select class="filter-select" id="entityFilter" onchange="filterData()">
-                    <option value="">كل الجهات</option>
-                </select>
-
-                <select class="filter-select" id="statusFilter" onchange="filterData()">
-                    <option value="">كل الحالات</option>
-                    <option value="مغلق">مغلق</option>
-                    <option value="معلق">معلق</option>
-                    <option value="قيد الإجراء">قيد الإجراء</option>
-                </select>
-
-                <div class="results-count" id="resultsCount">0 نتيجة</div>
-            </div>
-
-            <!-- جدول البيانات -->
-            <div class="table-responsive">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>المشروع</th>
-                            <th>نوع الخطاب</th>
-                            <th>الموضوع</th>
-                            <th>الجهة</th>
-                            <th>تاريخ الخطاب</th>
-                            <th>المدة الفعلية للخطاب</th>
-                            <th>الحالة</th>
-                            <th>رقم الخطاب</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody">
-                        <tr>
-                            <td colspan="9" style="text-align: center; padding: 20px;">جاري تحميل البيانات من Google Sheets...</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>المشروع</th>
+                                <th>نوع الخطاب</th>
+                                <th>القطاع</th>
+                                <th>الموضوع</th>
+                                <th>الجهة</th>
+                                <th>تاريخ الخطاب</th>
+                                <th>الحالة</th>
+                                <th>رقم الخطاب</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <tr><td colspan="9" style="text-align: center; padding: 20px;">جاري جلب البيانات...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- حاوية أزرار الترقيم -->
+                <div class="pagination" id="paginationControls"></div>
             </div>
         </div>
+
+        <!-- 2. قسم: نظرة عامة -->
+        <div id="view-overview" class="view-section">
+            <div class="kpi-grid" id="kpiContainer">
+                <!-- سيتم تعبئتها برمجياً -->
+            </div>
+        </div>
+
+        <!-- 3. قسم: التحليل والتفصيل (للأنواع، القطاعات، الجهات، الزمن) -->
+        <div id="view-analysis" class="view-section">
+            <div class="content-card">
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th id="analysis-col-name">التصنيف</th>
+                                <th>إجمالي الخطابات</th>
+                                <th>النسبة المئوية</th>
+                            </tr>
+                        </thead>
+                        <tbody id="analysisTableBody">
+                            <!-- سيتم تعبئتها برمجياً -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
     </div>
 
-    <!-- برمجة جلب البيانات والربط والفلترة -->
     <script>
-        // ضع رابط الـ CSV الخاص بملف Google Sheets هنا
-        const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTj6YGwmgSm9QbBEPFenGvKEeuQLxDmxXdNpsJLmcULsG6yKEflLJ4THemIsdzLiGnicm2f-7q2d5SV/pub?output=csv'; // استبدل هذا بالرابط الخاص بك
+        // رابط البيانات (تأكد من أنه ينتهي بـ pub?output=csv)
+        const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTj6YGwmgSm9QbBEPFenGvKEeuQLxDmxXdNpsJLmcULsG6yKEflLJ4THemIsdzLiGnicm2f-7q2d5SV/pub?output=csv';
 
         let rawData = [];
+        let currentFilteredData = [];
+        
+        // إعدادات الترقيم (Pagination)
+        let currentPage = 1;
+        const rowsPerPage = 20;
 
-        // بيانات افتراضية تجريبية في حال عدم وضع رابط شيت بعد
-        const mockData = [
-            { id: 1, project: 'ترقيم وتسجيل الثروة الحيوانية', type: 'توجيه رد', subject: 'الرد على تأخر صرف المطالبات المالية لمشروع ترقيم الثروة الحيوانية', entity: 'مدير عام الإدارة العامة للصحة الحيوانية', date: '2024-04-24', duration: '-', status: 'مغلق', code: '5222466' },
-            { id: 2, project: 'إنشاء وتجهيز مركز الخدمات التسويقية للمنتجات الزراعية بمنطقة حائل', type: 'توجيه رد', subject: 'الرد على خطاب نقل مركز التسويق الزراعي مدينة النخيل', entity: 'فروع الوزارة', date: '2025-05-24', duration: '-', status: 'مغلق', code: '5232176' },
-            { id: 3, project: 'إنشاء وتجهيز مصنع إعداد وتجهيز البن بمنطقة عسير', type: 'إفادة', subject: 'طلب أرض بديلة', entity: 'فروع الوزارة', date: '2024-05-05', duration: '-', status: 'مغلق', code: '5207947' },
-            { id: 4, project: 'إنشاء وتجهيز مركز الخدمات التسويقية للمنتجات الزراعية بمنطقة حائل', type: 'المطالبات المالية', subject: 'تحديث خطاب إلحاقي بخصوص نقل الخدمات التسويقية بحائل', entity: 'فروع الوزارة', date: '2024-06-26', duration: '-', status: 'معلق', code: '5232176' },
-            { id: 5, project: 'توريد بيوت محمية وعمل مظلات زراعية وشبكات ري لمدن الورد والنباتات العطرية بجازان', type: 'توجيه رد', subject: 'إيضاح بأن المشروع غير مشابه لما تم إثباته وأنه توريد وليس إنشاء', entity: 'الشؤون القانونية', date: '2024-11-07', duration: '-', status: 'معلق', code: '5282471' },
-            { id: 6, project: 'توريد وتركيب صناديق التبريد حفظ الأسماك على قوارب الصيد', type: 'مطالبات', subject: 'بخصوص إلغاء منافسة صناديق التبريد للطاقة الحديثة', entity: 'لجنة فحص العروض', date: '2017-07-24', duration: '-', status: 'معلق', code: '25008430' },
-            { id: 7, project: 'أخرى', type: 'مطالبات', subject: 'خطاب طلب استكمال اللازم للمشاريع المتأخرة عند الاختلال المالي', entity: 'وكيل الوزارة', date: '2012-07-24', duration: '-', status: 'معلق', code: '25005223' }
-        ];
-
-        // دالة جلب البيانات المحدثة للتعرف على الأعمدة العربية
+        // ----------------------------------------------------
+        // 1. جلب البيانات من Google Sheets
+        // ----------------------------------------------------
         function fetchSheetData() {
             Papa.parse(GOOGLE_SHEET_CSV_URL, {
                 download: true,
                 header: true,
                 skipEmptyLines: true,
                 complete: function(results) {
-                    // توحيد مسميات الأعمدة سواء كانت عربية أو إنجليزية
                     rawData = results.data.map((row, index) => {
                         return {
                             id: row['id'] || row['م'] || row['الرقم'] || row['#'] || (index + 1),
                             project: row['project'] || row['المشروع'] || '-',
                             type: row['type'] || row['category'] || row['نوع الخطاب'] || row['التصنيف'] || '-',
+                            sector: row['sector'] || row['القطاع'] || '-',
                             subject: row['subject'] || row['الموضوع'] || '-',
                             entity: row['entity'] || row['الجهة'] || row['الجهة الموجه لها'] || '-',
                             date: row['date'] || row['تاريخ الخطاب'] || row['التاريخ'] || '-',
-                            duration: row['duration'] || row['المدة الفعلية للخطاب'] || row['المدة الفعلية'] || row['المدة'] || '-',
                             status: row['status'] || row['الحالة'] || 'غير محدد',
                             code: row['code'] || row['رقم الخطاب'] || row['الرقم المرجعي'] || '-'
                         };
                     });
                     
-                    renderTable(rawData);
+                    currentFilteredData = [...rawData];
+                    renderTable(currentFilteredData, 1);
                     populateFilters(rawData);
                     
                     const now = new Date();
                     document.getElementById('update-time').innerText = 'أخر تحديث: ' + now.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
                 },
                 error: function(err) {
-                    console.error("تفاصيل خطأ الاتصال:", err);
-                    alert("تعذر جلب البيانات. تأكد من صحة الرابط.");
+                    alert("تعذر جلب البيانات. تأكد من أن الرابط بصيغة CSV.");
                 }
             });
         }
 
-        // بناء الجدول
-        function renderTable(data) {
+        // ----------------------------------------------------
+        // 2. نظام الترقيم وعرض الجدول (Pagination & Table)
+        // ----------------------------------------------------
+        function renderTable(data, page = 1) {
+            currentPage = page;
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
-
             document.getElementById('resultsCount').innerText = `${data.length} نتيجة`;
 
             if(data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">لا توجد نتائج مطابقة للبحث.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">لا توجد بيانات مطابقة.</td></tr>';
+                renderPagination(0, 1);
                 return;
             }
 
-            data.forEach((row, index) => {
+            // اقتطاع 20 سجل فقط للصفحة الحالية
+            const totalPages = Math.ceil(data.length / rowsPerPage);
+            const startIndex = (page - 1) * rowsPerPage;
+            const paginatedData = data.slice(startIndex, startIndex + rowsPerPage);
+
+            paginatedData.forEach((row, idx) => {
                 const tr = document.createElement('tr');
                 
-                // تحديد لون الشارة
                 let statusClass = 'badge-status-pending';
-                if(row.status === 'مغلق') statusClass = 'badge-status-closed';
-                if(row.status === 'متأخر' || row.status === 'متعثر') statusClass = 'badge-status-delayed';
+                if(row.status.includes('مغلق')) statusClass = 'badge-status-closed';
+                if(row.status.includes('متأخر') || row.status.includes('متعثر')) statusClass = 'badge-status-delayed';
 
                 tr.innerHTML = `
-                    <td>${row.id || (index + 1)}</td>
-                    <td style="font-weight: 500;">${row.project || '-'}</td>
-                    <td><span class="badge badge-type">${row.type || row.category || '-'}</span></td>
-                    <td style="max-width: 300px; white-space: normal;">${row.subject || '-'}</td>
-                    <td>${row.entity || '-'}</td>
-                    <td style="direction: ltr; text-align: right;">${row.date || '-'}</td>
-                    <td>${row.duration || '-'}</td>
-                    <td><span class="badge ${statusClass}">${row.status || 'غير محدد'}</span></td>
-                    <td style="font-weight: 600;">${row.code || '-'}</td>
+                    <td>${startIndex + idx + 1}</td>
+                    <td style="font-weight: 500; max-width: 200px;">${row.project}</td>
+                    <td><span class="badge badge-type">${row.type}</span></td>
+                    <td>${row.sector}</td>
+                    <td style="max-width: 250px; white-space: normal;">${row.subject}</td>
+                    <td>${row.entity}</td>
+                    <td style="direction: ltr;">${row.date}</td>
+                    <td><span class="badge ${statusClass}">${row.status}</span></td>
+                    <td style="font-weight: 600;">${row.code}</td>
                 `;
                 tbody.appendChild(tr);
             });
+
+            renderPagination(totalPages, page);
         }
 
-        // تعبئة القوائم المنسدلة بالفلاتر المتاحة تلقائياً
+        function renderPagination(totalPages, currentPage) {
+            const paginationDiv = document.getElementById('paginationControls');
+            paginationDiv.innerHTML = '';
+            if (totalPages <= 1) return;
+
+            // زر السابق
+            const prevBtn = document.createElement('button');
+            prevBtn.className = 'page-btn';
+            prevBtn.innerText = 'السابق';
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.onclick = () => renderTable(currentFilteredData, currentPage - 1);
+            paginationDiv.appendChild(prevBtn);
+
+            // أرقام الصفحات (تبسيط العرض لأول 5 صفحات لتجنب الزحام)
+            let startP = Math.max(1, currentPage - 2);
+            let endP = Math.min(totalPages, currentPage + 2);
+
+            for (let i = startP; i <= endP; i++) {
+                const btn = document.createElement('button');
+                btn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+                btn.innerText = i;
+                btn.onclick = () => renderTable(currentFilteredData, i);
+                paginationDiv.appendChild(btn);
+            }
+
+            // زر التالي
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'page-btn';
+            nextBtn.innerText = 'التالي';
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.onclick = () => renderTable(currentFilteredData, currentPage + 1);
+            paginationDiv.appendChild(nextBtn);
+        }
+
+        // ----------------------------------------------------
+        // 3. الفلترة المتقدمة
+        // ----------------------------------------------------
         function populateFilters(data) {
-            const types = [...new Set(data.map(item => item.type || item.category).filter(Boolean))];
-            const entities = [...new Set(data.map(item => item.entity).filter(Boolean))];
+            const types = [...new Set(data.map(i => i.type).filter(x => x !== '-'))];
+            const sectors = [...new Set(data.map(i => i.sector).filter(x => x !== '-'))];
+            const entities = [...new Set(data.map(i => i.entity).filter(x => x !== '-'))];
 
-            const typeSelect = document.getElementById('typeFilter');
-            typeSelect.innerHTML = '<option value="">كل التصنيفات</option>';
-            types.forEach(t => typeSelect.innerHTML += `<option value="${t}">${t}</option>`);
+            const fillSelect = (id, arr, defaultText) => {
+                const select = document.getElementById(id);
+                select.innerHTML = `<option value="">${defaultText}</option>`;
+                arr.forEach(item => select.innerHTML += `<option value="${item}">${item}</option>`);
+            };
 
-            const entitySelect = document.getElementById('entityFilter');
-            entitySelect.innerHTML = '<option value="">كل الجهات</option>';
-            entities.forEach(e => entitySelect.innerHTML += `<option value="${e}">${e}</option>`);
+            fillSelect('typeFilter', types, 'كل التصنيفات');
+            fillSelect('sectorFilter', sectors, 'كل القطاعات');
+            fillSelect('entityFilter', entities, 'كل الجهات');
         }
 
-        // دالة الفلترة والبحث اللحظية
         function filterData() {
-            const searchValue = document.getElementById('searchInput').value.toLowerCase();
-            const selectedType = document.getElementById('typeFilter').value;
-            const selectedEntity = document.getElementById('entityFilter').value;
-            const selectedStatus = document.getElementById('statusFilter').value;
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const fType = document.getElementById('typeFilter').value;
+            const fSector = document.getElementById('sectorFilter').value;
+            const fEntity = document.getElementById('entityFilter').value;
+            const fStatus = document.getElementById('statusFilter').value;
 
-            const filtered = rawData.filter(row => {
-                const matchesSearch = 
-                    (row.project && row.project.toLowerCase().includes(searchValue)) ||
-                    (row.subject && row.subject.toLowerCase().includes(searchValue)) ||
-                    (row.entity && row.entity.toLowerCase().includes(searchValue)) ||
-                    (row.code && row.code.toString().includes(searchValue));
-
-                const matchesType = !selectedType || (row.type || row.category) === selectedType;
-                const matchesEntity = !selectedEntity || row.entity === selectedEntity;
-                const matchesStatus = !selectedStatus || row.status === selectedStatus;
-
-                return matchesSearch && matchesType && matchesEntity && matchesStatus;
+            currentFilteredData = rawData.filter(row => {
+                const matchSearch = (row.project + row.subject + row.entity + row.code).toLowerCase().includes(search);
+                const matchType = !fType || row.type === fType;
+                const matchSector = !fSector || row.sector === fSector;
+                const matchEntity = !fEntity || row.entity === fEntity;
+                const matchStatus = !fStatus || row.status === fStatus;
+                return matchSearch && matchType && matchSector && matchEntity && matchStatus;
             });
 
-            renderTable(filtered);
+            // عند البحث، العودة للصفحة الأولى دائماً
+            renderTable(currentFilteredData, 1);
         }
 
-        // التشغيل عند فتح الصفحة
-        window.onload = function() {
-            fetchSheetData();
-        };
+        // ----------------------------------------------------
+        // 4. نظام التنقل بين الصفحات والتحليلات (Tabs/Views)
+        // ----------------------------------------------------
+        function switchView(viewName, clickedElement) {
+            // تفعيل الزر في القائمة الجانبية
+            document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+            clickedElement.classList.add('active');
+
+            // إخفاء كافة الأقسام
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+
+            const pageTitle = document.getElementById('page-title');
+
+            if (viewName === 'log') {
+                document.getElementById('view-log').classList.add('active');
+                pageTitle.innerText = 'سجل متابعة الخطابات';
+            } 
+            else if (viewName === 'overview') {
+                document.getElementById('view-overview').classList.add('active');
+                pageTitle.innerText = 'نظرة عامة ومؤشرات الأداء';
+                renderOverview();
+            } 
+            else {
+                // أقسام التحليل
+                document.getElementById('view-analysis').classList.add('active');
+                pageTitle.innerText = clickedElement.innerText.trim();
+                renderAnalysis(viewName, pageTitle.innerText);
+            }
+        }
+
+        // بناء النظرة العامة
+        function renderOverview() {
+            const total = rawData.length;
+            const closed = rawData.filter(r => r.status.includes('مغلق')).length;
+            const pending = rawData.filter(r => r.status.includes('معلق') || r.status.includes('قيد')).length;
+            const delayed = rawData.filter(r => r.status.includes('متأخر') || r.status.includes('متعثر')).length;
+
+            document.getElementById('kpiContainer').innerHTML = `
+                <div class="kpi-card"><i class="fa-solid fa-folder-open"></i><h3>إجمالي الخطابات</h3><div class="value">${total}</div></div>
+                <div class="kpi-card"><i class="fa-solid fa-circle-check" style="color:#22c55e;"></i><h3>خطابات مغلقة</h3><div class="value">${closed}</div></div>
+                <div class="kpi-card"><i class="fa-solid fa-clock-rotate-left" style="color:#eab308;"></i><h3>قيد الإجراء / معلق</h3><div class="value">${pending}</div></div>
+                <div class="kpi-card"><i class="fa-solid fa-triangle-exclamation" style="color:#ef4444;"></i><h3>متأخر / متعثر</h3><div class="value">${delayed}</div></div>
+            `;
+        }
+
+        // بناء جداول التحليل والتفصيل (حسب النوع، القطاع، الجهة، الزمن)
+        function renderAnalysis(groupBy, titleName) {
+            document.getElementById('analysis-col-name').innerText = titleName;
+            const tbody = document.getElementById('analysisTableBody');
+            tbody.innerHTML = '';
+
+            let mapKey = '';
+            if(groupBy === 'type') mapKey = 'type';
+            else if(groupBy === 'sector') mapKey = 'sector';
+            else if(groupBy === 'entity') mapKey = 'entity';
+            else if(groupBy === 'timeline') mapKey = 'status'; // المراحل الزمنية نربطها بالحالة مؤقتاً
+
+            // تجميع البيانات
+            const counts = {};
+            rawData.forEach(row => {
+                const key = row[mapKey] || 'غير مصنف';
+                counts[key] = (counts[key] || 0) + 1;
+            });
+
+            const total = rawData.length || 1;
+
+            // ترتيب تنازلي وعرض
+            Object.entries(counts).sort((a,b) => b[1] - a[1]).forEach(([key, count]) => {
+                const percent = ((count / total) * 100).toFixed(1);
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="font-weight: 500;">${key}</td>
+                        <td style="font-weight: bold; color: var(--sidebar-bg);">${count}</td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="width: 40px;">${percent}%</span>
+                                <div style="flex-grow: 1; background: #e2e8f0; height: 8px; border-radius: 4px; overflow: hidden;">
+                                    <div style="width: ${percent}%; background: var(--accent-gold); height: 100%;"></div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // التشغيل التلقائي عند فتح الصفحة
+        window.onload = fetchSheetData;
     </script>
 </body>
 </html>
