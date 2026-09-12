@@ -437,32 +437,37 @@
             { id: 7, project: 'أخرى', type: 'مطالبات', subject: 'خطاب طلب استكمال اللازم للمشاريع المتأخرة عند الاختلال المالي', entity: 'وكيل الوزارة', date: '2012-07-24', duration: '-', status: 'معلق', code: '25005223' }
         ];
 
-        // دالة جلب البيانات
+        // دالة جلب البيانات المحدثة للتعرف على الأعمدة العربية
         function fetchSheetData() {
-            if(!GOOGLE_SHEET_CSV_URL.includes('pub?output=csv')) {
-                // إذا لم يتم وضع الرابط بعد، عرض البيانات التجريبية
-                rawData = mockData;
-                renderTable(rawData);
-                populateFilters(rawData);
-                return;
-            }
-
             Papa.parse(GOOGLE_SHEET_CSV_URL, {
                 download: true,
                 header: true,
                 skipEmptyLines: true,
                 complete: function(results) {
-                    rawData = results.data;
+                    // توحيد مسميات الأعمدة سواء كانت عربية أو إنجليزية
+                    rawData = results.data.map((row, index) => {
+                        return {
+                            id: row['id'] || row['م'] || row['الرقم'] || row['#'] || (index + 1),
+                            project: row['project'] || row['المشروع'] || '-',
+                            type: row['type'] || row['category'] || row['نوع الخطاب'] || row['التصنيف'] || '-',
+                            subject: row['subject'] || row['الموضوع'] || '-',
+                            entity: row['entity'] || row['الجهة'] || row['الجهة الموجه لها'] || '-',
+                            date: row['date'] || row['تاريخ الخطاب'] || row['التاريخ'] || '-',
+                            duration: row['duration'] || row['المدة الفعلية للخطاب'] || row['المدة الفعلية'] || row['المدة'] || '-',
+                            status: row['status'] || row['الحالة'] || 'غير محدد',
+                            code: row['code'] || row['رقم الخطاب'] || row['الرقم المرجعي'] || '-'
+                        };
+                    });
+                    
                     renderTable(rawData);
                     populateFilters(rawData);
+                    
                     const now = new Date();
                     document.getElementById('update-time').innerText = 'أخر تحديث: ' + now.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
                 },
                 error: function(err) {
-                    console.error("خطأ في جلب بيانات Google Sheets:", err);
-                    alert("تعذر جلب البيانات، سيتم عرض البيانات التجريبية.");
-                    rawData = mockData;
-                    renderTable(rawData);
+                    console.error("تفاصيل خطأ الاتصال:", err);
+                    alert("تعذر جلب البيانات. تأكد من صحة الرابط.");
                 }
             });
         }
